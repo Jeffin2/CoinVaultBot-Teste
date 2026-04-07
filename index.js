@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config(); // 🔥 sempre no topo
 
 const fs = require("fs");
 const express = require("express");
@@ -16,7 +16,7 @@ const client = new Client({
   ]
 });
 
-// 📂 banco
+// 📂 cria banco se não existir
 if (!fs.existsSync("dados.json")) {
   fs.writeFileSync(
     "dados.json",
@@ -26,11 +26,23 @@ if (!fs.existsSync("dados.json")) {
 
 const prefix = "!";
 
-// 🌐 servidor web
+// 🌐 servidor web (Render precisa disso)
 const PORT = process.env.PORT || 3000;
 
 app.get("/", (req, res) => res.send("CoinVault online 🚀"));
-app.listen(PORT, () => console.log("🌐 Web ok"));
+
+app.listen(PORT, () => {
+  console.log("🌐 Web ok");
+});
+
+// 🔍 DEBUG GLOBAL
+process.on("unhandledRejection", (err) => {
+  console.error("❌ ERRO GLOBAL:", err);
+});
+
+client.on("error", (err) => {
+  console.error("❌ ERRO DO CLIENT:", err);
+});
 
 // 🤖 pronto
 client.once("ready", () => {
@@ -52,12 +64,33 @@ client.on("messageCreate", (message) => {
   const cmd = args.shift().toLowerCase();
 
   if (comandos[cmd]) {
-    comandos[cmd](message, args, dados);
-    fs.writeFileSync("dados.json", JSON.stringify(dados, null, 2));
+    try {
+      comandos[cmd](message, args, dados);
+      fs.writeFileSync("dados.json", JSON.stringify(dados, null, 2));
+    } catch (err) {
+      console.error("❌ Erro no comando:", err);
+      message.reply("❌ Erro ao executar comando.");
+    }
   } else {
     message.reply("❌ Comando não encontrado.");
   }
 });
 
-// 🚀 login
-client.login(process.env.TOKEN);
+// 🚀 LOGIN COM DEBUG
+(async () => {
+  try {
+    console.log("🔑 TOKEN:", process.env.TOKEN ? "OK" : "NÃO ENCONTRADO");
+
+    if (!process.env.TOKEN) {
+      throw new Error("TOKEN não definido!");
+    }
+
+    console.log("🔄 Tentando logar...");
+
+    await client.login(process.env.TOKEN);
+
+    console.log("✅ Login feito com sucesso!");
+  } catch (err) {
+    console.error("❌ ERRO AO LOGAR:", err);
+  }
+})();
