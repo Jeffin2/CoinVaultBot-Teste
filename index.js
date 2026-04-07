@@ -1,4 +1,4 @@
-require("dotenv").config(); // 🔥 sempre no topo
+require("dotenv").config();
 
 const fs = require("fs");
 const express = require("express");
@@ -44,8 +44,8 @@ client.on("error", (err) => {
   console.error("❌ ERRO DO CLIENT:", err);
 });
 
-// 🤖 pronto
-client.once("ready", () => {
+// 🤖 pronto (evento atualizado)
+client.once("clientReady", () => {
   console.log(`✅ Logado como ${client.user.tag}`);
 });
 
@@ -76,8 +76,8 @@ client.on("messageCreate", (message) => {
   }
 });
 
-// 🚀 LOGIN COM DEBUG
-(async () => {
+// 🚀 LOGIN COM DELAY (melhor pro Render)
+const startBot = async () => {
   try {
     console.log("🔑 TOKEN:", process.env.TOKEN ? "OK" : "NÃO ENCONTRADO");
 
@@ -85,12 +85,16 @@ client.on("messageCreate", (message) => {
       throw new Error("TOKEN não definido!");
     }
 
-    console.log("🔄 Tentando logar...");
+    console.log("⏳ Aguardando 5s...");
+    await new Promise(res => setTimeout(res, 5000));
 
+    console.log("🔄 Tentando logar...");
     await client.login(process.env.TOKEN);
 
-    console.log("✅ Login feito com sucesso!");
+    console.log("✅ Login iniciado!");
   } catch (err) {
     console.error("❌ ERRO AO LOGAR:", err);
   }
-})();
+};
+
+startBot();
